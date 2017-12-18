@@ -53,6 +53,13 @@ module.exports = {
     encryptedPassword: {
       type: 'string'
     },
+    verifyEmail: {
+      type: 'boolean',
+      defaultsTo: false
+    },
+    encryptedEmailVerificationOTP: {
+      type: 'string'
+    },
     toJSON: function() {
       var obj = this.toObject();
       delete obj.encryptedPassword;
@@ -66,6 +73,32 @@ module.exports = {
         if (err) return next(err);
         values.encryptedPassword = hash;
         next();
+      })
+    })
+  },
+  compareEmailVerificationOTP: function(otp, user, cb) {
+    bcrypt.compare(otp, user.encryptedEmailVerificationOTP, function(err, match) {
+      if (err) {
+        console.log(" cb(err).. findOne.authenticated called.........");
+        cb(err);
+      }
+      if (match) {
+        cb(null, true);
+      } else {
+        console.log("not match.....");
+        cb(err);
+      }
+    })
+  },
+  comparePassword: function(password, user, cb = () => {}) {
+    bcrypt.compare(password, user.encryptedPassword, function(err, match) {
+      return new Promise(function(resolve, reject) {
+        if (err) {
+          cb(err);
+          return reject(err);
+        }
+        cb(null, match)
+        resolve(match);
       })
     })
   },

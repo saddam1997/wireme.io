@@ -4,6 +4,8 @@
  * @description :: Server-side logic for managing traders
  * @help        :: See http://sailsjs.org/#!/documentation/concepts/Controllers
  */
+var nodemailer = require('nodemailer');
+var bcrypt = require('bcrypt');
 
 var transporter = nodemailer.createTransport({
   service: sails.config.common.supportEmailIdService,
@@ -22,7 +24,7 @@ module.exports = {
     var traderpassword = req.body.password;
     var traderconfirmPassword = req.body.confirmPassword;
     if (!traderemailaddress || !traderpassword || !traderconfirmPassword || !traderfullName || !tradermobileNumber) {
-      console.log("User Entered invalid parameter ");
+      console.log("Trader Entered invalid parameter ");
       return res.json({
         "message": "Can't be empty!!!",
         statusCode: 400
@@ -41,7 +43,7 @@ module.exports = {
       if (err) {
         console.log("Error to find trader from database");
         return res.json({
-          "message": "Error to find User",
+          "message": "Error to find Trader",
           statusCode: 400
         });
       }
@@ -66,9 +68,10 @@ module.exports = {
           if (err) return next(err);
           var encOtpForEmail = hash;
           var traderObj = {
+            fullName: traderfullName,
+            mobileNumber: tradermobileNumber,
             email: traderemailaddress,
             password: traderpassword,
-            encryptedSpendingpassword: hashspendingpassword,
             encryptedEmailVerificationOTP: encOtpForEmail
           }
           var mailOptions = {
@@ -218,25 +221,165 @@ module.exports = {
               });
             } else {
               console.log('Email sent: ' + info.response);
-              Trader.create(traderObj).exec(function(err, traderAddDetails) {
-                if (err) {
-                  console.log("Error to Create New trader !!!");
+              Trader.create(traderObj)
+                .exec(function(err, traderAddDetails) {
+                  if (err) {
+                    console.log("Error to Create New trader !!!");
+                    return res.json({
+                      "message": "Error to create New Trader",
+                      statusCode: 400
+                    });
+                  }
+                  console.log("Trader Create Succesfully...........");
                   return res.json({
-                    "message": "Error to create New User",
-                    statusCode: 400
+                    "message": "We sent OTP on your email address please verify email!!!",
+                    "traderMailId": traderemailaddress,
+                    statusCode: 200
                   });
-                }
-                console.log("User Create Succesfully...........");
-                return res.json({
-                  "message": "We sent OTP on your email address please verify email!!!",
-                  "traderMailId": traderemailaddress,
-                  statusCode: 200
                 });
-              });
             }
           });
         });
       }
     });
-  };
+  },
+  verifyEmailAddress: function(req, res, next) {
+    console.log("Enter into verifyEmailAddress");
+    var traderMailId = req.param('email');
+    var otp = req.param('otp');
+    if (!traderMailId || !otp) {
+      console.log("Can't be empty!!! by trader.....");
+      return res.json({
+        "message": "Can't be empty!!!",
+        statusCode: 400
+      });
+    }
+    Trader.findOne({
+      email: traderMailId
+    }).exec(function(err, trader) {
+      if (err) {
+        return res.json({
+          "message": "Error to find trader",
+          statusCode: 401
+        });
+      }
+      if (!trader) {
+        return res.json({
+          "message": "Invalid email!",
+          statusCode: 401
+        });
+      }
+      if (trader.verifyEmail) {
+        return res.json({
+          "message": "Email already verified !!",
+          statusCode: 401
+        });
+      }
+      Trader.compareEmailVerificationOTP(otp, trader, function(err, valid) {
+        if (err) {
+          console.log("Error to compare otp");
+          return res.json({
+            "message": "Error to compare otp",
+            statusCode: 401
+          });
+        }
+        if (!valid) {
+          return res.json({
+            "message": "OTP is incorrect!!",
+            statusCode: 401
+          });
+        } else {
+          console.log("OTP is verified successfully");
+          Trader.update({
+              email: traderMailId
+            }, {
+              verifyEmail: true
+            })
+            .exec(function(err, updatedTrader) {
+              if (err) {
+                return res.json({
+                  "message": "Error to update passoword!",
+                  statusCode: 401
+                });
+              }
+              console.log("Update passoword successfully!!!");
+              res.json(200, {
+                "message": "Email verified successfully",
+                "traderMailId": traderMailId,
+                statusCode: 200
+              });
+            });
+        }
+      });
+    });
+  },
+  login: function(req, res) {
+    console.log("Enter into login!!!" + req.body.email);
+    var traderemail = req.param('email');
+    var password = req.param('password');
+    if (!traderemail || !password) {
+      console.log("email and password required");
+      return res.json({
+        "message": "Can't be empty!!!",
+        statusCode: 401
+      });
+    }
+    console.log("Finding trader....");
+    Trader.findOne({
+        email: traderemail
+      })
+      .populateAll()
+      .exec(function(err, trader) {
+        if (err) {
+          return res.json({
+            "message": "Error to find trader",
+            statusCode: 401
+          });
+        }
+        if (!trader) {
+          return res.json({
+            "message": "Please enter registered email!",
+            statusCode: 401
+          });
+        }
+        if (!trader.verifyEmail) {
+          return res.json({
+            "message": "We already sent email verification link please verify your email !!",
+            statusCode: 401
+          });
+        }
+        console.log("Compare passs");
+        Trader.comparePassword(password, trader, function(err, valid) {
+          if (err) {
+            console.log("Error to compare password");
+            return res.json({
+              "message": "Error to compare password",
+              statusCode: 401
+            });
+          }
+          if (!valid) {
+            return res.json({
+              "message": "Please enter correct password",
+              statusCode: 401
+            });
+          } else {
+            console.log("Trader is valid return trader details !!!");
+            res.json({
+              trader: trader,
+              statusCode: 200,
+              token: jwToken.issue({
+                id: trader.id
+              })
+            });
+          }
+        });
+      });
+  },
+  logout: function(req, res) {
+    req.session.destroy()
+    res.json({
+      message: 'Logout Successfully',
+      statusCode: 200
+    });
+  },
 }
