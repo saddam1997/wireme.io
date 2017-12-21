@@ -11,6 +11,12 @@ module.exports = {
   autoCreatedAt: false,
   autoUpdatedAt: false,
   attributes: {
+    lat:{
+      type:'string'
+    },
+    long:{
+      type:'string'
+    },
     fullName: {
       type: 'string'
     },

@@ -95,5 +95,24 @@ module.exports = {
     })
   },
 
-  
+  getUserFriends: function (req, res) {
+    var userId = req.body.userId;
+    Chat.find({
+      or : [
+        {sender: userId},
+        {recipient: userId}
+      ]
+    }).exec(function (err, record) {
+      if(err)
+        return res.json({'err':err,'message':'failed to retrieve user list', status:400})
+
+      var mappedFriends = record.map(function (t) {
+        if(t.sender==userId)
+          return t.recipient
+        else return t.sender;
+      });
+
+      return res.json({message:'FriendsList retrieved Successfully', status:200, data:mappedFriends});
+    })
+  },
 };

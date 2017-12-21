@@ -16,6 +16,16 @@ var transporter = nodemailer.createTransport({
 });
 
 module.exports = {
+
+
+  getAllTrader: function (req, res) {
+    Trader.find().exec(function (err, record) {
+      if(err)
+        return res.json({'message': 'failed to get users', status:400})
+      return res.json({'message':'traders retrieved successfully', status:200, data:record});
+    })
+  },
+
   createNewTrader: function(req, res) {
     console.log("Enter into createNewTrader :: " + req.body.email);
     var traderfullName = req.body.fullName;
@@ -313,6 +323,11 @@ module.exports = {
       });
     });
   },
+
+
+
+
+
   login: function(req, res) {
     console.log("Enter into login!!!" + req.body.email);
     var traderemail = req.param('email');
@@ -364,13 +379,18 @@ module.exports = {
             });
           } else {
             console.log("Trader is valid return trader details !!!");
-            res.json({
-              trader: trader,
-              statusCode: 200,
-              token: jwToken.issue({
-                id: trader.id
-              })
-            });
+            //updation of longitude and lattitude code
+            Trader.update({email:traderemail}, {lat:req.body.lat, long:req.body.long}).exec(function (err, res) {
+              if(err)
+                return res.json({message:'failed to update lat long', status:400});
+              res.json({
+                trader: trader,
+                statusCode: 200,
+                token: jwToken.issue({
+                  id: trader.id
+                })
+              });
+            })
           }
         });
       });
