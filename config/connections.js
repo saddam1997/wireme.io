@@ -50,9 +50,9 @@ module.exports.connections = {
   mysqlServer: {
     adapter: 'sails-mysql',
     host: 'localhost',
-    user: 'root', //optional
+    user: 'rooot', //optional
     password: 'password', //optional
-    database: 'wireme_io' //optional
+    database: 'wireme' //optional
   }
   /***************************************************************************
    *                                                                          *

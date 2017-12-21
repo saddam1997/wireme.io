@@ -5,6 +5,8 @@
  * @help        :: See http://sailsjs.org/#!/documentation/concepts/Controllers
  */
 
+var util = require('util');
+
 module.exports = {
   getChatMessages: function (req, res) {
     const chatId = req.body.chatId;
@@ -35,9 +37,10 @@ module.exports = {
     })
   },
   createChat: function (req, res) {
-    const sender = req.body.sender;
-    const recipient = req.body.recipient;
-    Chat.create({sender:sender, recipient:recipient}).exec(function (err, record) {
+    const senderId = req.body.sender;
+    const recipientId = req.body.recipient;
+
+    Chat.create({"sender":"sender23"}).exec(function (err, record) {
       if(err)
         return res.json({message: 'failed to create chat record',error:err, status:400 })
       return res.json({message:'chat has been created', status:200})
