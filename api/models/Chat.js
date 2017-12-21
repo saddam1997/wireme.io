@@ -9,7 +9,9 @@ module.exports = {
 
   attributes: {
     chatId:{
-      type:'string'
+      type:'integer',
+      autoIncrement:true,
+      unique:true
     },
     sender: {
       type: 'string'

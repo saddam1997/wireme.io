@@ -69,7 +69,8 @@ module.exports = {
     const recipientId = req.body.recipient;
 
     Chat.create({
-      "sender": senderId
+      "sender": senderId,
+      "recipient": recipientId
     }).exec(function(err, record) {
       if (err)
         return res.json({
@@ -84,5 +85,15 @@ module.exports = {
 
     })
   },
+  updateAcceptance: function (req, res) {
+    var isAccepted = req.body.isAccepted;
+    var chatId = req.body.chatId;
+    Chat.update({"chatId":chatId}, {"isAccepted":isAccepted}).exec(function (err, record) {
+      if(err)
+        return res.json({'err':err, status:400})
+      return res.json({message:'Acceptance is success', status:200, data:record});
+    })
+  },
 
+  
 };
