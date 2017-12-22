@@ -11,16 +11,19 @@ module.exports = {
 
   getChatMessages: function(req, res) {
     const chatId = req.body.chatId;
+
+
+
     Message.find({
       chatId: chatId
     }).exec(function(err, records) {
       if (err)
         return res.json({
-          status: 400,
+          statusCode: 400,
           message: 'failed to get data'
         });
       return res.json({
-        status: 200,
+        statusCode: 200,
         data: records
       });
     });
@@ -33,7 +36,7 @@ module.exports = {
     }).exec(function(err, records) {
       if (err)
         return res.json({
-          status: 400,
+          statusCode: 400,
           message: 'failed to get data'
         });
       return res.json({
@@ -59,11 +62,12 @@ module.exports = {
         return res.json({
           message: 'failed to create message record',
           error: err,
-          status: 400
+          statusCode: 400
         })
+      sails.sockets.blast('NEWMESSAGE', {message:'page need to refreshed on this event'});
       return res.json({
         message: 'message has been sent',
-        status: 200
+        statusCode: 200
       })
     })
   },
@@ -79,11 +83,12 @@ module.exports = {
         return res.json({
           message: 'failed to create chat record',
           error: err,
-          status: 400
+          statusCode: 400
         })
       return res.json({
         message: 'chat has been created',
-        status: 200
+        statusCode: 200,
+        chatId:record.chatId
       })
 
     })
@@ -93,8 +98,8 @@ module.exports = {
     var chatId = req.body.chatId;
     Chat.update({"chatId":chatId}, {"isAccepted":isAccepted}).exec(function (err, record) {
       if(err)
-        return res.json({'err':err, status:400})
-      return res.json({message:'Acceptance is success', status:200, data:record});
+        return res.json({'err':err, statusCode:400})
+      return res.json({message:'Acceptance is success', statusCode:200, data:record});
     })
   },
 
@@ -107,7 +112,7 @@ module.exports = {
       ]
     }).exec(function (err, record) {
       if(err)
-        return res.json({'err':err,'message':'failed to retrieve user list', status:400})
+        return res.json({'err':err,'message':'failed to retrieve user list', statusCode:400})
 
       var mappedFriends = record.map(function (t) {
         if(t.sender==userId)
@@ -115,7 +120,7 @@ module.exports = {
         else return {email:t.sender, chatId:t.chatId};
       });
 
-      return res.json({message:'FriendsList retrieved Successfully', status:200, data:mappedFriends});
+      return res.json({message:'FriendsList retrieved Successfully', statusCode:200, data:mappedFriends});
     })
   },
 };

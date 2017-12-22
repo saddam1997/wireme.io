@@ -21,8 +21,8 @@ module.exports = {
   getAllTrader: function (req, res) {
     Trader.find().exec(function (err, record) {
       if(err)
-        return res.json({'message': 'failed to get users', status:400})
-      return res.json({'message':'traders retrieved successfully', status:200, data:record});
+        return res.json({'message': 'failed to get users', statusCode:400})
+      return res.json({'message':'traders retrieved successfully', statusCode:200, data:record});
     })
   },
 
