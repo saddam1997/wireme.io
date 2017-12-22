@@ -8,6 +8,7 @@
 var util = require('util');
 
 module.exports = {
+
   getChatMessages: function(req, res) {
     const chatId = req.body.chatId;
     Message.find({
@@ -41,10 +42,12 @@ module.exports = {
       });
     });
   },
+
   sendMessage: function(req, res) {
     const sender = req.body.sender;
     const recipient = req.body.recipient;
     const content = req.body.content;
+    //ChatId is autoincrement
     const chatId = req.body.chatId;
     Message.create({
       sender: sender,
@@ -96,7 +99,7 @@ module.exports = {
   },
 
   getUserFriends: function (req, res) {
-    var userId = req.body.userId;
+    var userId = req.body.email;
     Chat.find({
       or : [
         {sender: userId},
@@ -108,8 +111,8 @@ module.exports = {
 
       var mappedFriends = record.map(function (t) {
         if(t.sender==userId)
-          return t.recipient
-        else return t.sender;
+          return {email:t.recipient, chatId:t.chatId};
+        else return {email:t.sender, chatId:t.chatId};
       });
 
       return res.json({message:'FriendsList retrieved Successfully', status:200, data:mappedFriends});
