@@ -380,11 +380,14 @@ module.exports = {
           } else {
             console.log("Trader is valid return trader details !!!");
             //updation of longitude and lattitude code
-            Trader.update({email:traderemail}, {lat:req.body.lat, long:req.body.long}).exec(function (err, res) {
+
+            console.log('this is body',req.body);
+
+            Trader.update({email:traderemail}, {lat:req.body.lat, long:req.body.long}).exec(function (err, response) {
               if(err)
                 return res.json({message:'failed to update lat long', status:400});
-              res.json({
-                trader: trader,
+              return res.json({
+                trader: response[0],
                 statusCode: 200,
                 token: jwToken.issue({
                   id: trader.id

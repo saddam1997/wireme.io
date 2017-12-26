@@ -6,24 +6,21 @@
  */
 
 module.exports = {
-
   attributes: {
     chatId:{
-      type:'integer',
-      autoIncrement:true,
-      unique:true
-    },
+      type: 'integer',
+      unique: true,
+      primaryKey: true,
+      },
     sender: {
       type: 'string'
     },
     recipient: {
       type:'string'
     },
-    owner:{
-      type:'string'
-    },
     isAccepted:{
-      type:'boolean'
+      type:'boolean',
+      defaultsTo:false
     }
   }
 };

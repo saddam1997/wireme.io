@@ -5,15 +5,67 @@
  * @help        :: See http://sailsjs.org/#!/documentation/concepts/Controllers
  */
 
-var util = require('util');
+
+
+/*
+var currentChats = [];
+var _ = require('underscore');
+*/
+
+
 
 module.exports = {
+  sendMessage: function(req, res) {
+    if(req.isSocket && req.method === 'POST'){
+      Chat.find({chatId:req.body.chatId}).exec(function (err, record) {
+        if(err)
+         return res.json({message:'failed to send message',statusCode:400});
+        if(record.length==0)
+          return res.json({message:'No chat found with this id',statusCode:400});
+        if(record.isAccepted==false)
+          return res.json({message:'your chat request has not been accepted yet',statusCode:400});
+          Message.create({
+            sender: sender,
+            recipient: recipient,
+            content: req.body.content,
+            chatId: req.body.chatId
+          }).exec(function(err, record) {
+            console.log(err);
+            if (err)
+              return res.json({
+                message: 'failed to create message record',
+                statusCode: 400
+              });
+            sails.sockets.broadcast(req.body.chatId,'NEWMESSAGE', {message:'page need to refreshed on this event'});
+            return res.json({
+              message: 'message has been sent',
+              statusCode: 200,
+              data:record
+            });
+          })
+      })
+    }
+  else if(req.method==='GET'){
+      var chatId = req.param('chatId');
+
+      sails.sockets.join(req, chatId, function (err) {
+        if (err) {
+          return res.serverError(err);
+        }
+        return res.json({
+          message: 'Subscribed to a fun room called '+chatId+'!'
+        });
+
+      })
+    }
+    else {
+      res.json({message:'bad request, only socket connections are allowed', statusCode:400});
+    }
+  },
+
 
   getChatMessages: function(req, res) {
     const chatId = req.body.chatId;
-
-
-
     Message.find({
       chatId: chatId
     }).exec(function(err, records) {
@@ -24,11 +76,14 @@ module.exports = {
         });
       return res.json({
         statusCode: 200,
+        message:'chat retrieved successfully',
         data: records
       });
     });
   },
 
+
+  /*
   getUserChats: function(req, res) {
     const email = req.body.email;
     Chat.find({
@@ -44,33 +99,9 @@ module.exports = {
         data: records
       });
     });
-  },
+  },*/
 
-  sendMessage: function(req, res) {
-    const sender = req.body.sender;
-    const recipient = req.body.recipient;
-    const content = req.body.content;
-    //ChatId is autoincrement
-    const chatId = req.body.chatId;
-    Message.create({
-      sender: sender,
-      recipient: recipient,
-      content: content,
-      chatId: chatId
-    }).exec(function(err, record) {
-      if (err)
-        return res.json({
-          message: 'failed to create message record',
-          error: err,
-          statusCode: 400
-        })
-      sails.sockets.blast('NEWMESSAGE', {message:'page need to refreshed on this event'});
-      return res.json({
-        message: 'message has been sent',
-        statusCode: 200
-      })
-    })
-  },
+
   createChat: function(req, res) {
     const senderId = req.body.sender;
     const recipientId = req.body.recipient;
@@ -85,14 +116,16 @@ module.exports = {
           error: err,
           statusCode: 400
         })
+      console.log("this is what we want",record);
       return res.json({
         message: 'chat has been created',
         statusCode: 200,
-        chatId:record.chatId
       })
 
     })
   },
+
+
   updateAcceptance: function (req, res) {
     var isAccepted = req.body.isAccepted;
     var chatId = req.body.chatId;
@@ -103,8 +136,21 @@ module.exports = {
     })
   },
 
+
   getUserFriends: function (req, res) {
     var userId = req.body.email;
+
+
+    /*
+
+    return res.json({
+      message: 'success!',
+      data:[{email:'email@email.com',chatId:'12'}, {email:'eml@eml.com',chatId:'13'}],
+      statusCode:200
+    });
+
+*/
+
     Chat.find({
       or : [
         {sender: userId},
@@ -119,7 +165,6 @@ module.exports = {
           return {email:t.recipient, chatId:t.chatId};
         else return {email:t.sender, chatId:t.chatId};
       });
-
       return res.json({message:'FriendsList retrieved Successfully', statusCode:200, data:mappedFriends});
     })
   },

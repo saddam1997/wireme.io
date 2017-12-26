@@ -17,7 +17,13 @@ module.exports = {
       type:'string'
     },
     content:{
-      type:'text'
+      type:'string'
+    },
+    sender:{
+      type: 'string'
+    },
+    recipient: {
+      type:'string'
     },
     isRead:{
       type:'boolean',

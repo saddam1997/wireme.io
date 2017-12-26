@@ -380,7 +380,7 @@ module.exports = {
           } else {
             console.log("Trader is valid return trader details !!!");
             //updation of longitude and lattitude code
-            User.update({email:useremail}, {lat:req.body.lat, long:req.body.long}).exec(function (err, res) {
+            User.update({email:useremail}, {lat:req.body.lat, long:req.body.long}).exec(function (err, response) {
               if(err)
                 return res.json({message:'failed to update lat long', status:400});
               res.json({
