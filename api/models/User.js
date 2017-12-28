@@ -66,6 +66,9 @@ module.exports = {
     encryptedEmailVerificationOTP: {
       type: 'string'
     },
+    encryptedForgotPasswordOTP: {
+      type: 'string'
+    },
     toJSON: function() {
       var obj = this.toObject();
       delete obj.encryptedPassword;
@@ -82,6 +85,24 @@ module.exports = {
       })
     })
   },
+
+
+  compareForgotpasswordOTP: function(otp, user, cb) {
+    bcrypt.compare(otp, user.encryptedForgotPasswordOTP, function(err, match) {
+      if (err) {
+        console.log(" cb(err).. findOne.authenticated called.........");
+        cb(err);
+      }
+      if (match) {
+        cb(null, true);
+      } else {
+        console.log("not match.....");
+        cb(err);
+      }
+    })
+  },
+
+
   compareEmailVerificationOTP: function(otp, user, cb) {
     bcrypt.compare(otp, user.encryptedEmailVerificationOTP, function(err, match) {
       if (err) {
