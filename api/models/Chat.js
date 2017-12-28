@@ -21,6 +21,10 @@ module.exports = {
     isAccepted:{
       type:'boolean',
       defaultsTo:false
+    },
+    isRejected: {
+      type:'boolean',
+      defaultsTo:false
     }
   }
 };

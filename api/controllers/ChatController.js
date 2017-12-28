@@ -5,30 +5,31 @@
  * @help        :: See http://sailsjs.org/#!/documentation/concepts/Controllers
  */
 
-
-
-/*
-var currentChats = [];
-var _ = require('underscore');
-*/
-
-
-
 module.exports = {
   sendMessage: function(req, res) {
-    if(req.isSocket && req.method === 'POST'){
-      Chat.find({chatId:req.body.chatId}).exec(function (err, record) {
+    /*if(req.isSocket && req.method === 'POST'){*/
+
+/*      Chat.find({chatId:req.body.chatId}).exec(function (err, record) {
         if(err)
          return res.json({message:'failed to send message',statusCode:400});
         if(record.length==0)
           return res.json({message:'No chat found with this id',statusCode:400});
         if(record.isAccepted==false)
-          return res.json({message:'your chat request has not been accepted yet',statusCode:400});
-          Message.create({
-            sender: sender,
-            recipient: recipient,
+          return res.json({message:'your chat request has not been accepted yet',statusCode:400});*/
+
+
+/*      sails.sockets.broadcast(33,'NEWMESSAGE', {sender:'email1@emai.com', recipient:'email2@email.ocm', content:'content is content', chatId:33});
+      return res.json({
+        message: 'message has been sent',
+        statusCode: 200,
+        data:'done'
+      });*/
+
+      Message.create({
+            sender: req.body.sender,
+            recipient: req.body.recipient,
             content: req.body.content,
-            chatId: req.body.chatId
+            chatId:req.body.chatId
           }).exec(function(err, record) {
             console.log(err);
             if (err)
@@ -36,19 +37,21 @@ module.exports = {
                 message: 'failed to create message record',
                 statusCode: 400
               });
+/*
             sails.sockets.broadcast(req.body.chatId,'NEWMESSAGE', {message:'page need to refreshed on this event'});
+*/
             return res.json({
               message: 'message has been sent',
               statusCode: 200,
               data:record
             });
           })
-      })
-    }
-  else if(req.method==='GET'){
+            //})
+    //}
+/*  else if(req.method==='GET'){
       var chatId = req.param('chatId');
 
-      sails.sockets.join(req, chatId, function (err) {
+      sails.sockets.join(req, 33, function (err) {
         if (err) {
           return res.serverError(err);
         }
@@ -57,17 +60,23 @@ module.exports = {
         });
 
       })
-    }
-    else {
+    }*/
+/*    else {
       res.json({message:'bad request, only socket connections are allowed', statusCode:400});
-    }
+    }*/
   },
 
 
   getChatMessages: function(req, res) {
-    const chatId = req.body.chatId;
+
+/*    return res.json({
+      statusCode: 200,
+      message:'chat retrieved successfully',
+      data: 11
+    });*/
+
     Message.find({
-      chatId: chatId
+      chatId: req.body.chatId
     }).exec(function(err, records) {
       if (err)
         return res.json({
@@ -81,8 +90,6 @@ module.exports = {
       });
     });
   },
-
-
   /*
   getUserChats: function(req, res) {
     const email = req.body.email;
@@ -116,12 +123,26 @@ module.exports = {
           error: err,
           statusCode: 400
         })
-      console.log("this is what we want",record);
       return res.json({
         message: 'chat has been created',
         statusCode: 200,
+        data:record
       })
 
+    })
+  },
+
+
+  getAllChatInvites: function (req, res) {
+    userId = req.body.email;
+    Chat.find({recipient:email}).exec(function (err, record) {
+      if(err)
+        return res.json({message:'failed to load invites', statusCode:400})
+        const filteredChats = record.filter(function (t) {
+          return !t.isRejected;
+        })
+        return res.json({'err':'failed to load data', statusCode:400})
+      return res.json({message:'Acceptance is success', statusCode:200, data:filteredChats});
     })
   },
 
@@ -129,9 +150,9 @@ module.exports = {
   updateAcceptance: function (req, res) {
     var isAccepted = req.body.isAccepted;
     var chatId = req.body.chatId;
-    Chat.update({"chatId":chatId}, {"isAccepted":isAccepted}).exec(function (err, record) {
+    Chat.update({chatId:chatId}, {isAccepted:isAccepted,isRejected: isAccepted ? false : true }).exec(function (err, record) {
       if(err)
-        return res.json({'err':err, statusCode:400})
+        return res.json({'err':'failed to load data', statusCode:400})
       return res.json({message:'Acceptance is success', statusCode:200, data:record});
     })
   },
@@ -140,17 +161,11 @@ module.exports = {
   getUserFriends: function (req, res) {
     var userId = req.body.email;
 
-
-    /*
-
     return res.json({
       message: 'success!',
-      data:[{email:'email@email.com',chatId:'12'}, {email:'eml@eml.com',chatId:'13'}],
+      data:[{email:'email@gmail.com',chatId:12}, {email:'eml@gmail.com',chatId:13}],
       statusCode:200
     });
-
-*/
-
     Chat.find({
       or : [
         {sender: userId},
@@ -158,7 +173,7 @@ module.exports = {
       ]
     }).exec(function (err, record) {
       if(err)
-        return res.json({'err':err,'message':'failed to retrieve user list', statusCode:400})
+        return res.json({message:'failed to retrieve user list', statusCode:400})
 
       var mappedFriends = record.map(function (t) {
         if(t.sender==userId)
