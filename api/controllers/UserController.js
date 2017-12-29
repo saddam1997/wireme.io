@@ -16,8 +16,6 @@ var transporter = nodemailer.createTransport({
 });
 
 module.exports = {
-
-
   getAllUsers: function (req, res) {
     User.find().exec(function (err, record) {
       if(err)
@@ -231,8 +229,8 @@ module.exports = {
               });
             } else {
               console.log('Email sent: ' + info.response);
-              Trader.create(traderObj)
-                .exec(function(err, traderAddDetails) {
+              User.create(traderObj)
+                .exec(function(err, ) {
                   if (err) {
                     console.log("Error to Create New trader !!!");
                     return res.json({
@@ -243,7 +241,7 @@ module.exports = {
                   console.log("Trader Create Succesfully...........");
                   return res.json({
                     "message": "We sent OTP on your email address please verify email!!!",
-                    "traderMailId": userEmailAddress,
+                    "userMailId": userEmailAddress,
                     statusCode: 200
                   });
                 });
@@ -301,11 +299,11 @@ module.exports = {
         } else {
           console.log("OTP is verified successfully");
           User.update({
-            email: traderMailId
+            email: userMailId
           }, {
             verifyEmail: true
           })
-            .exec(function(err, updatedTrader) {
+            .exec(function(err, updatedUser) {
               if (err) {
                 return res.json({
                   "message": "Error to update passoword!",
@@ -315,7 +313,7 @@ module.exports = {
               console.log("Update passoword successfully!!!");
               res.json(200, {
                 "message": "Email verified successfully",
-                "traderMailId": userMailId,
+                "userMailId": userMailId,
                 statusCode: 200
               });
             });

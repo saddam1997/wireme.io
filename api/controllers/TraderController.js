@@ -405,4 +405,195 @@ module.exports = {
       statusCode: 200
     });
   },
+
+
+
+
+///////////////// forgot password code starts here //////////////
+
+  sentOtpToEmailForgotPassword: function (req, res, next) {
+
+    console.log("Enter into sentOtpToEmail");
+    var userMailId = req.body.userMailId;
+    if (!userMailId) {
+      console.log("Invalid Parameter by user.....");
+      return res.json({
+        "message": "Invalid Parameter",
+        statusCode: 400
+      });
+    }
+    Trader.findOne({
+      email: userMailId
+    }).exec(function (err, user) {
+      if (err) {
+        return res.json({
+          "message": "Error to find user",
+          statusCode: 401
+        });
+      }
+      if (!user) {
+        return res.json({
+          "message": "Invalid email!",
+          statusCode: 401
+        });
+      }
+      var transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+          user: 'wallet.bcc@gmail.com',
+          pass: 'boosters@123'
+        }
+      });
+      var newCreatedPassword = Math.floor(100000 + Math.random() * 900000);
+      console.log("newCreatedPassword :: " + newCreatedPassword);
+      var mailOptions = {
+        from: 'wallet.bcc@gmail.com',
+        to: userMailId,
+        subject: 'Please reset your password',
+        text: 'We heard that you lost your BccPay password. Sorry about that! ' +
+        '\n But don’t worry! You can use this otp reset your password ' + newCreatedPassword
+      };
+      transporter.sendMail(mailOptions, function (error, info) {
+        if (error) {
+          console.log(error);
+        } else {
+          console.log(newCreatedPassword + 'Email sent: ' + info.response);
+          //res.json(200,"Message Send Succesfully");
+          console.log("createing encryptedPassword ....");
+          bcrypt.hash(newCreatedPassword.toString(), 10, function (err, hash) {
+            if (err) return next(err);
+            var newEncryptedPass = hash;
+            Trader.update({
+              email: userMailId
+            }, {
+              encryptedForgotPasswordOTP: newEncryptedPass
+            })
+              .exec(function (err, updatedUser) {
+                if (err) {
+                  return res.serverError(err);
+                }
+                console.log("OTP forgot update succesfully!!!");
+                return res.json({
+                  "message": "Otp sent on user mail id",
+                  "userMailId": userMailId,
+                  statusCode: 200
+                });
+              });
+          });
+        }
+      });
+    });
+  },
+  verifyOtpToEmailForgotPassord: function (req, res, next) {
+
+    console.log("Enter into sentOtpToEmail");
+    var userMailId = req.body.userMailId;
+    var otp = req.body.otp;
+    if (!userMailId || !otp) {
+      console.log("Invalid Parameter by user.....");
+      return res.json({
+        "message": "Invalid Parameter",
+        statusCode: 400
+      });
+    }
+    Trader.findOne({
+      email: userMailId
+    }).exec(function (err, user) {
+      if (err) {
+        return res.json({
+          "message": "Error to find user",
+          statusCode: 401
+        });
+      }
+      if (!user) {
+        return res.json({
+          "message": "Invalid email!",
+          statusCode: 401
+        });
+      }
+      Trader.compareForgotpasswordOTP(otp, user, function (err, valid) {
+        if (err) {
+          console.log("Error to compare otp");
+          return res.json({
+            "message": "Error to compare otp",
+            statusCode: 401
+          });
+        }
+        if (!valid) {
+          return res.json({
+            "message": "Please enter correct otp",
+            statusCode: 401
+          });
+        } else {
+          console.log("OTP is varified succesfully");
+          res.json(200, {
+            "message": "OTP is varified succesfully",
+            "userMailId": userMailId,
+            statusCode: 200
+          });
+        }
+      });
+    });
+  },
+  updateForgotPassordAfterVerify: function (req, res, next) {
+    console.log("Enter into sentOtpToEmail");
+    var userMailId = req.body.userMailId;
+    var newPassword = req.body.newPassword;
+    var confirmNewPassword = req.body.confirmNewPassword;
+    if (!userMailId || !newPassword || !confirmNewPassword) {
+      console.log("Invalid Parameter by user.....");
+      return res.json({
+        "message": "Invalid Parameter",
+        statusCode: 401
+      });
+    }
+    if (newPassword != confirmNewPassword) {
+      console.log("Invalid Parameter by user.....");
+      return res.json({
+        "message": "New Password and Confirm New Password not match",
+        statusCode: 401
+      });
+    }
+    Trader.findOne({
+      email: userMailId
+    }).exec(function (err, user) {
+      if (err) {
+        return res.json({
+          "message": "Error to find user",
+          statusCode: 401
+        });
+      }
+      if (!user) {
+        return res.json({
+          "message": "Invalid email!",
+          statusCode: 401
+        });
+      }
+      bcrypt.hash(confirmNewPassword, 10, function (err, hash) {
+        if (err) res.json({
+          "message": "Errot to bcrypt passoword",
+          statusCode: 401
+        });
+        var newEncryptedPass = hash;
+        Trader.update({
+          email: userMailId
+        }, {
+          encryptedPassword: newEncryptedPass
+        })
+          .exec(function (err, updatedUser) {
+            if (err) {
+              return res.json({
+                "message": "Error to update passoword!",
+                statusCode: 401
+              });
+            }
+            console.log("Update passoword succesfully!!!");
+            return res.json({
+              "message": "Your passoword updated succesfully",
+              statusCode: 200
+            });
+          });
+      });
+    });
+  }
 }
