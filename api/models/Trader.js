@@ -11,6 +11,12 @@ module.exports = {
   autoCreatedAt: false,
   autoUpdatedAt: false,
   attributes: {
+    email: {
+      type: 'email',
+      email: true,
+      required: true,
+      unique: true
+    },
     lat:{
       type:'string'
     },
@@ -23,19 +29,8 @@ module.exports = {
     traderId: {
       type: 'string'
     },
-    buyPrice: {
-      type: 'float',
-      defaultsTo: 0
-    },
-    salePrice: {
-      type: 'float',
-      defaultsTo: 0
-    },
-    latitude: {
-      type: 'string'
-    },
-    longitude: {
-      type: 'string'
+    volume:{
+      type:'float'
     },
     profileImagePath: {
       type: 'string'
@@ -49,12 +44,6 @@ module.exports = {
     volume: {
       type: 'float',
       defaultsTo: 0
-    },
-    email: {
-      type: 'email',
-      email: true,
-      required: true,
-      unique: true
     },
     encryptedPassword: {
       type: 'string'
